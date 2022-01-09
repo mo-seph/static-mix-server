@@ -1,46 +1,61 @@
-# Getting Started with Create React App
+# Mix Server
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This is intended as a static site version of Soundcloud etc.
 
-## Available Scripts
+If you put folders full of mp3/wav files into public/media, and then run
+```
+npm run index_files
+```
 
-In the project directory, you can run:
+It will create a JSON index of them all.
 
-### `npm start`
+If you then run this (e.g. `npm start`), you'll get a webserver which will let you play any of the files by playlist, with a nice(ish) interface.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+The idea is that this can the be deployed easily and once the server is running, new media can be rsync'd into the directory.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+The other intention is to add the possibility for timestamped comments, but that will require an active server.
 
-### `npm test`
+## Deploying
+Running `npm build` will create a build directory with everything that you need in there.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+This can then be served using e.g. nginx, simply by creating a server, e.g.:
+```
+server {
+        listen 8080;
 
-### `npm run build`
+        root <wherever you put it>;
+        index index.html index.htm index.nginx-debian.html;
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+        server_name <your server names>;
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+        location / {
+                try_files $uri $uri.html $uri/ =404;
+        }
+}
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Then you can copy everything across with
+```
+rsync -v -e ssh -aqr build/ <user>@<host>:<wherever you put it>
+```
 
-### `npm run eject`
+Once this is done the first time, you should be able to:
+- Update the code without touching the files
+```
+//TBC, but something with excluding public/media from the rsync
+rsync -v -e ssh -aqr --exclude 'public/media' build/ <user>@<host>:<wherever you put it>
+```
+- Update the music files without changing the code
+```
+//TBC, but something like
+npm run index_files
+rsync -v -e ssh -aqr public/media/ <user>@<host>:<wherever you put it>/public/media
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Todos
+- [ ] Create waveforms ahead of time so that it loads them faster
+- [ ] Create zips of directories for download
+- [ ] Allow for a JSON file that specifies the playlist rather than generating it from the files (to allow names, track ordering etc.)
+- [ ] Artwork per playlist
