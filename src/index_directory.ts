@@ -15,7 +15,6 @@ function index_files(root:string) : void {
   //
   const jd = "export const playlists = " + JSON.stringify(result,null,2)
   console.log("Final Result: ",jd)
-  fs.writeFile("./src/playlists.js",jd, (f)=>{if(f) console.log(f)})
   fs.writeFile("./public/media/playlists.json",JSON.stringify(result,null,2), (f)=>{if(f) console.log(f)})
 }
 
@@ -29,14 +28,24 @@ function processDir(path:string,root:string) : PlaylistDef[] {
 }
 
 function dirToPlaylist(path:string,root:string): PlaylistDef | null {
+  // First look for a playlist.json file that has this information already setup
+  const json_fn = root+"/"+path+"/playlist.json"
+  if( fs.existsSync(json_fn) ) {
+    const data = fs.readFileSync(json_fn,'utf8')
+    return JSON.parse(data)
+  }
   const files =  fs.readdirSync(root+"/"+path).filter(audioFile)
   if( files.length ) {
-    const r = {
-      basedir:path,
+    const r:PlaylistDef = {
       name:path.replace(/.*\//g,""),
       id:path.replace(/.*\//g,"").replace(/[^a-zA-Z0-9]/g,""),
       tracks: files.map((f)=>fileToItem(f,path,root))
     }
+    if( fs.existsSync(root+"/"+path+"/Artwork.jpg") ) r.image_url = root+"/"+path+"/Artwork.jpg"
+    else {
+      const candidates = fs.readdirSync(root+"/"+path).filter((f) => f.toLowerCase().endsWith(".jpg"))
+      if( candidates.length ) r.image_url = root+"/"+path+"/"+candidates[0]
+    } 
     return r
   }
   return null
