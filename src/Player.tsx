@@ -14,7 +14,7 @@ import { Button, Paper, Card, CardContent, CardActions, CardActionArea, CardHead
 
 import { useTheme } from '@mui/material/styles';
 
-import { CloudDownload, PlayArrow, Pause } from '@mui/icons-material';
+import { Download, PlayArrow, Pause, RssFeedTwoTone } from '@mui/icons-material';
 
 const mediaRoot = "/media"
 
@@ -62,12 +62,12 @@ const TrackListElement = (props:InterfaceSpec<TrackDef>) => {
 
             <CardHeader 
                 title={<>
-                    <Typography variant="subtitle1"><PlayArrow/>{props.item.name || props.item.url}</Typography>
+                    <Typography variant="subtitle1"><PlayArrow color='primary'/>{props.item.name || props.item.url}</Typography>
                     </>} 
                 action={
                     <div>
                         <div>{props.item.length || "?:?"}</div>
-                        <a href={mediaRoot + "/" + props.item.url}><CloudDownload/></a>
+                        <a href={mediaRoot + "/" + props.item.url}><Download color='primary'/></a>
                     </div>}
                 >
             </CardHeader>
@@ -83,11 +83,11 @@ const PlaylistDisplay = (props:any) => {
         <Card variant='outlined' key={props.num} color={theme.palette.primary.light}> 
             <CardHeader 
                 title={<>
-                    <Typography variant="h4">{pd.name}</Typography>
+                    <Typography variant="h4" color="primary" align="left">{pd.name}</Typography>
                     </>}
                 action={
                 <div>
-                    {pd.archive_url ? <a href={mediaRoot + "/" + pd.archive_url}><CloudDownload/></a> : ""}
+                    {pd.archive_url ? <a href={mediaRoot + "/" + pd.archive_url}><Download color='secondary'/></a> : ""}
                 </div>}
                     >
             </CardHeader>
@@ -115,11 +115,17 @@ export default (setup:PlaylistSetup) => {
     const [playing,setPlaying] = useState(false)
  
     const regionCreatedHandler = (r:any) => {}
+    const theme = useTheme()
 
     useEffect( () => {
         console.log("Playlist updated!",setup.playlist)
         setNewTrack(setup.playlist.tracks[0])
     },[setup.playlist])
+
+    const isPlaying = useCallback(() => {
+        console.log("Checking play status:",playing);
+        return playing
+    },[playing])
 
     const wavesurferRef : MutableRefObject<WaveSurfer> = useRef();
     const handleWSMount = useCallback(
@@ -130,6 +136,12 @@ export default (setup:PlaylistSetup) => {
     
             wavesurferRef.current.on("ready", () => {
               console.log("WaveSurfer is ready");
+              if( isPlaying() ) {
+                  console.log("Ready to play, and playing, so will start")
+                  wavesurferRef.current.play()
+              } else {
+                  console.log("Ready to play but not playing")
+              }
             });
     
             /*
@@ -155,18 +167,19 @@ export default (setup:PlaylistSetup) => {
         //const fn = mediaRoot + "/" + playlist.basedir + "/" + t.url
         const fn = mediaRoot + "/" + t.url
         console.log("Loading track: ",fn)
-        const res = wavesurferRef.current.load(fn);
-        console.log("Result: ",res)
+        wavesurferRef.current.load(fn);
         setTrack(t)
     }, []);
 
     const play = useCallback(() => {
         if( playing ) {
+            console.log("Setting playing to false")
             wavesurferRef.current.pause();
             setPlaying(false)
         }
         else {
             wavesurferRef.current.play();
+            console.log("Setting playing to true")
             setPlaying(true)
         }
         //wavesurferRef.current.playPause().then((d:any) => {console.log("playing: ",d)});
@@ -197,16 +210,19 @@ export default (setup:PlaylistSetup) => {
         <Divider>.</Divider>
         <Paper elevation={3}>
             <div className="waveform-buttons">
-                <button onClick={play} className="waveform-button">{playing ? <Pause/>: <PlayArrow/>}</button>
+                <button onClick={play} className="waveform-button">{playing ? <Pause color='primary'/>: <PlayArrow color='primary'/>}</button>
             </div>   
             <div className="waveform-title">{track.name}</div>
             <div className="clear"></div>
             <div className="waveform-container">
             
                 <WaveSurfer plugins={plugins} onMount={handleWSMount}>
-                <WaveForm id="waveform">
+                <WaveForm id="waveform" 
+                    backgroundColor="#eee"
+                    progressColor={theme.palette.warning.dark}
+                    waveColor={theme.palette.primary.dark}>
                 </WaveForm>
-                <div id="timeline" />
+                <div id="timeline" style={{background: "#eee"}}/>
             
                 </WaveSurfer>
         
