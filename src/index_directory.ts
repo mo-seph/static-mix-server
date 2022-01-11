@@ -41,10 +41,10 @@ function dirToPlaylist(path:string,root:string): PlaylistDef | null {
       id:path.replace(/.*\//g,"").replace(/[^a-zA-Z0-9]/g,""),
       tracks: files.map((f)=>fileToItem(f,path,root))
     }
-    if( fs.existsSync(root+"/"+path+"/Artwork.jpg") ) r.image_url = root+"/"+path+"/Artwork.jpg"
+    if( fs.existsSync(root+"/"+path+"/Artwork.jpg") ) r.image_url = path+"/Artwork.jpg"
     else {
       const candidates = fs.readdirSync(root+"/"+path).filter((f) => f.toLowerCase().endsWith(".jpg"))
-      if( candidates.length ) r.image_url = root+"/"+path+"/"+candidates[0]
+      if( candidates.length ) r.image_url = path+"/"+candidates[0]
     } 
     return r
   }

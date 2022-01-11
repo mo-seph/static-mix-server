@@ -31,7 +31,6 @@ function App() {
   return (
     <Router>
     <div className="App">
-      <h1>Mix Player</h1>
       <Playlist playlists = {playlists as PlaylistDef[]} />
     </div>
     </Router>

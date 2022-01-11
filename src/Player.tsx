@@ -10,7 +10,7 @@ import CursorPlugin from "wavesurfer.js/dist/plugin/wavesurfer.cursor.min";
 // @ts-ignore
 import { WaveSurfer, WaveForm, Region } from "wavesurfer-react";
 
-import { Button, Paper, Card, CardContent, CardActions, CardActionArea, CardHeader, Box,Divider,Typography,Stack } from '@mui/material';
+import { Button, Paper, Card, CardContent, CardActions, CardActionArea, CardHeader, Box,Divider,Typography,Stack,Avatar, Grid, List, ListItem, ListItemAvatar, ListItemText, ListItemButton } from '@mui/material';
 
 import { useTheme } from '@mui/material/styles';
 
@@ -43,51 +43,44 @@ interface PlaylistSetup {
     playlist:PlaylistDef
 }
 
-/*
-   <div className="tracklist-item">
-            <div onClick={act} key={props.num} className="tracklist-item-name">
-                {props.item.name || props.item.url}
-            </div>
-            <div className="tracklist-item-details">
-                <a href={mediaRoot + "/" + props.item.url}>D/L</a>&nbsp;&nbsp;
-                <span>{props.item.length || "?:?"}</span>
-            </div>
-        </div>
-        */
-
-const TrackListElement = (props:InterfaceSpec<TrackDef>) => {
+export interface TracklistDisplaySpec {
+    playlist:PlaylistDef
+    callback:(t:TrackDef)=>any
+}
+const TrackListDisplay = (props:TracklistDisplaySpec) => {
+ 
     return (
-        <Card variant='outlined' key={props.num}>
-            <CardActionArea onClick={() => props.callback(props.item)}>
-
-            <CardHeader 
-                title={<>
-                    <Typography variant="subtitle1"><PlayArrow color='primary'/>{props.item.name || props.item.url}</Typography>
-                    </>} 
-                action={
-                    <div>
-                        <div>{props.item.length || "?:?"}</div>
-                        <a href={mediaRoot + "/" + props.item.url}><Download color='primary'/></a>
-                    </div>}
-                >
-            </CardHeader>
-            </CardActionArea>
-        </Card>
+    <List dense={true} disablePadding={true} sx={{ width: '100%', height:400, bgcolor: 'background.paper', overflow:"scroll", }}>
+        {props.playlist.tracks.map((track,num) => (<>
+            <ListItem disablePadding={true} secondaryAction={<a href={mediaRoot + "/" + track.url}><Download color='primary'/></a>} >
+                <ListItemButton>
+                <ListItemAvatar onClick={() => props.callback(track)}><PlayArrow color='primary'/></ListItemAvatar>
+                <ListItemText
+                    onClick={() => props.callback(track)}
+                    primary={track.name || track.url}
+                    secondary={track.length || "?:?"}
+                />
+                </ListItemButton>
+            </ListItem>
+        </>)) }
+    </List>
     )
+  
 }
 
 const PlaylistDisplay = (props:any) => {
     const pd = props.playlist as PlaylistDef
     const theme = useTheme()
     return (
-        <Card variant='outlined' key={props.num} color={theme.palette.primary.light}> 
+        <Card key={props.num} color={theme.palette.primary.light}> 
             <CardHeader 
                 title={<>
                     <Typography variant="h4" color="primary" align="left">{pd.name}</Typography>
+                    {pd.image_url ? <Avatar src={mediaRoot + "/" +pd.image_url} variant="rounded" sx={{ width: 200, height: 200 }}/> : ""}
                     </>}
                 action={
                 <div>
-                    {pd.archive_url ? <a href={mediaRoot + "/" + pd.archive_url}><Download color='secondary'/></a> : ""}
+                    {pd.archive_url ? <a href={mediaRoot + "/" + pd.archive_url}><Download color='secondary'/></a> : <Download color='disabled'/>}
                 </div>}
                     >
             </CardHeader>
@@ -95,17 +88,6 @@ const PlaylistDisplay = (props:any) => {
     )
 }
 
-const PlaylistElement = (props:InterfaceSpec<PlaylistDef>) => {
-    const act = () => {
-        console.log("Playlist Selected")
-        props.callback(props.item)
-    }
-    return (
-        <div onClick={act} key={props.num} className="playlist-index-item">
-            {props.item.name}
-        </div>
-    )
-}
 
 export default (setup:PlaylistSetup) => {
     //const [playlist,setPlaylist] = useState(setup.playlist)
@@ -197,22 +179,21 @@ export default (setup:PlaylistSetup) => {
             )) }
         </Box>*/
     return (
-    <Box>
-        <PlaylistDisplay playlist={setup.playlist}/>
-        <Box height={400} sx={{
-            overflow:"scroll",
-            textAlign:"left"
-            }}>
-            {setup.playlist.tracks.map((t,i) => (
-                <TrackListElement item={t} callback={setNewTrack} num={i} />
-            )) }
-        </Box>
-        <Divider>.</Divider>
+    <Grid container spacing={2}>
+        <Grid item xs={4}>
+            <PlaylistDisplay playlist={setup.playlist}/>
+        </Grid>
+        <Grid item xs={8}>
+            <TrackListDisplay playlist={setup.playlist} callback={setNewTrack}  />
+        </Grid>
+        <Grid item xs={12}>
         <Paper elevation={3}>
             <div className="waveform-buttons">
-                <button onClick={play} className="waveform-button">{playing ? <Pause color='primary'/>: <PlayArrow color='primary'/>}</button>
+                <button onClick={play} className="waveform-button">{playing ? <Pause color='secondary'/>: <PlayArrow color='secondary'/>}</button>
             </div>   
-            <div className="waveform-title">{track.name}</div>
+            <div className="waveform-title">
+                <Typography variant="h6" color="primary" align="left">{track.name}</Typography>
+            </div>
             <div className="clear"></div>
             <div className="waveform-container">
             
@@ -220,6 +201,7 @@ export default (setup:PlaylistSetup) => {
                 <WaveForm id="waveform" 
                     backgroundColor="#eee"
                     progressColor={theme.palette.warning.dark}
+                    cursorColor={theme.palette.warning.dark}
                     waveColor={theme.palette.primary.dark}>
                 </WaveForm>
                 <div id="timeline" style={{background: "#eee"}}/>
@@ -228,6 +210,7 @@ export default (setup:PlaylistSetup) => {
         
             </div>
         </Paper>
-    </Box>
+        </Grid>
+    </Grid>
     );
 }
