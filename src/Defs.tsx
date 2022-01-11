@@ -2,6 +2,7 @@ export interface TrackDef {
     name?: string 
     length?: string
     url: string
+    waveform_url?:string
 }
 export interface PlaylistDef {
     image_url?:string

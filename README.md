@@ -58,5 +58,5 @@ rsync -v -e ssh -aqr public/media/ <user>@<host>:<wherever you put it>/public/me
 - [ ] Create waveforms ahead of time so that it loads them faster
 - [ ] Create zips of directories for download
 - [X] Allow for a JSON file that specifies the playlist rather than generating it from the files (to allow names, track ordering etc.)
-- [ ] Artwork per playlist
+- [X] Artwork per playlist
 - [ ] Manage playing better - move to next track at end, start playing on selection of new track if already playing (or always?)

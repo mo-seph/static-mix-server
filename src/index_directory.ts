@@ -5,6 +5,7 @@ import {TrackDef, PlaylistDef} from './Defs'
 // rather than import, if we use it with node :/
 import * as fs from 'fs'
 //const fs = require('fs');
+import AdmZip from 'adm-zip'
 
 const filetypes = ['mp3','wav']
 
@@ -20,6 +21,7 @@ function index_files(root:string) : void {
 
 function processDir(path:string,root:string) : PlaylistDef[] {
   const me = dirToPlaylist(path,root)
+  if( me ) playlistToZip(path,me,root)
   const r = me ? [me] : []
   const child_p = getSubdirs(path,root).map((p) => processDir(p,root))
   // Flatten
@@ -50,6 +52,17 @@ function dirToPlaylist(path:string,root:string): PlaylistDef | null {
   }
   return null
 }
+function playlistToZip(path:string,playlist:PlaylistDef,root:string) {
+  const archive = new AdmZip();
+  const fn = path + "/" + playlist.id + ".zip"
+  for( const t of playlist.tracks ) {
+    const trackFile = root + "/" + t.url
+    archive.addLocalFile(trackFile)
+  }
+  if( playlist.image_url ) archive.addLocalFile(root + "/" + playlist.image_url )
+  playlist.archive_url = fn
+  archive.writeZip(root + "/" + fn)
+}
 
 function fileToItem(filename:string,path:string,root:string) : TrackDef {
   const size = fs.statSync(root+"/"+path+"/"+filename).size
@@ -57,11 +70,15 @@ function fileToItem(filename:string,path:string,root:string) : TrackDef {
   const length = Math.ceil(size * 8 / 320000)
   const secs = `${(length % 60)}`.padStart(2,'0')
   const mins = `${Math.trunc(length/60)}`.padStart(2,'0')
-  return {
+
+  const r:TrackDef = {
     url:path+"/"+filename,
     name:filename.replace(/\.[^.]*$/,""),
     length:`${mins}:${secs}`
   }
+  const waveform_file = root+"/"+path+"/"+(filename.replace(/.[^.]*$/, ".waveform.json"))
+  if( fs.existsSync(waveform_file) ) r['waveform_url'] = waveform_file
+  return r
 }
 
 // Returns the path relative to root of all subdirectories
@@ -73,7 +90,6 @@ function audioFile(path:string):boolean {
   const path_s = path.toLowerCase()
   for( const f of filetypes ) { 
     if( path_s.endsWith(f)) return true 
-    else console.log(`${path_s} does not end with ${f}`)
   }
   return false
 }

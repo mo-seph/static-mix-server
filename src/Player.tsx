@@ -80,7 +80,7 @@ const PlaylistDisplay = (props:any) => {
                     </>}
                 action={
                 <div>
-                    {pd.archive_url ? <a href={mediaRoot + "/" + pd.archive_url}><Download color='secondary'/></a> : <Download color='disabled'/>}
+                    {pd.archive_url ? <a href={mediaRoot + "/" + pd.archive_url}><Download color='primary'/></a> : <Download color='disabled'/>}
                 </div>}
                     >
             </CardHeader>
@@ -149,7 +149,10 @@ export default (setup:PlaylistSetup) => {
         //const fn = mediaRoot + "/" + playlist.basedir + "/" + t.url
         const fn = mediaRoot + "/" + t.url
         console.log("Loading track: ",fn)
-        wavesurferRef.current.load(fn);
+        if( t.waveform_url ) {
+            wavesurferRef.current.load(fn, mediaRoot +"/"+t.waveform_url);
+        }
+        else wavesurferRef.current.load(fn);
         setTrack(t)
     }, []);
 
