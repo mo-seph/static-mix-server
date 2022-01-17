@@ -1,6 +1,7 @@
 // Running this based on: https://stackoverflow.com/questions/62096269/cant-run-my-node-js-typescript-project-typeerror-err-unknown-file-extension
 
 import {TrackDef, PlaylistDef} from './Defs'
+import {exec} from 'child_process'
 
 // rather than import, if we use it with node :/
 import * as fs from 'fs'
@@ -65,7 +66,8 @@ function playlistToZip(path:string,playlist:PlaylistDef,root:string) {
 }
 
 function fileToItem(filename:string,path:string,root:string) : TrackDef {
-  const size = fs.statSync(root+"/"+path+"/"+filename).size
+  const fn = root+"/"+path+"/"+filename
+  const size = fs.statSync(fn).size
   // Cheekily assume 320k MP3s...
   const length = Math.ceil(size * 8 / 320000)
   const secs = `${(length % 60)}`.padStart(2,'0')
@@ -76,8 +78,20 @@ function fileToItem(filename:string,path:string,root:string) : TrackDef {
     name:filename.replace(/\.[^.]*$/,""),
     length:`${mins}:${secs}`
   }
-  const waveform_file = root+"/"+path+"/"+(filename.replace(/.[^.]*$/, ".waveform.json"))
-  if( fs.existsSync(waveform_file) ) r['waveform_url'] = waveform_file
+  const base_name = filename.replace(/.[^.]*$/, "")
+  const waveform_file = root + "/" + path + "/" + base_name + ".waveform.json"
+  const waveform_url = path + "/" + base_name + ".waveform.json"
+  // try to make a waveform file?
+  /*
+  try {
+    const cmd = `audiowaveform -i "${fn}" -o "${waveform_file}" --pixels-per-second 20 --bits 8 --amplitude-scale auto`
+    console.log("Trying: '"+cmd+"'")
+    exec(cmd)
+  } catch(e) {
+    console.log("Couldn't make waveform: ",e)
+  }
+  if( fs.existsSync(waveform_file) ) r['waveform_url'] = waveform_url
+  */
   return r
 }
 

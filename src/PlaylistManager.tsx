@@ -6,10 +6,12 @@ import Player from "./Player";
 import { emptyPlaylist } from "./App";
 
 import { Button,Card, CardHeader, CardActions } from '@mui/material';
+import { CommentStore } from "./Comments";
 const mediaRoot = "/media"
 
 interface PlaylistManagerSetup {
     playlists:PlaylistDef[]
+    comments:CommentStore
 }
 
 const PlaylistElement = (props:InterfaceSpec<PlaylistDef>) => {
@@ -53,7 +55,7 @@ export default (setup:PlaylistManagerSetup) => {
             }
             </CardActions>
         </Card>
-        <Player playlist={playlist}/>
+        <Player playlist={playlist} comments={setup.comments}/>
   
       </div>
     );
